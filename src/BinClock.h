@@ -15,6 +15,8 @@ void secPWM(int units);
 void hourInc(void);
 void minInc(void);
 void toggleTime(void);
+int bcdConverter(int BCD);
+int binaryConverter(int bin);
 
 // define constants
 const char RTCAddr = 0x6f;

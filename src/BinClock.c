@@ -4,8 +4,8 @@
  * Modified for EEE3095S/3096S by Keegan Crankshaw
  * August 2019
  * 
- * <STUDNUM_1> <STUDNUM_2>
- * Date
+ * <LCKMAT002>
+ * 16 August 2019
 */
 
 #include <wiringPi.h>
@@ -67,25 +67,44 @@ int main(void){
 
 	//Set random time (3:04PM)
 	//You can comment this file out later
-	wiringPiI2CWriteReg8(RTC, HOUR, 0x13+TIMEZONE);
-	wiringPiI2CWriteReg8(RTC, MIN, 0x4);
-	wiringPiI2CWriteReg8(RTC, SEC, 0x00);
+	wiringPiI2CWriteReg8(RTC, HOUR, binaryConverter(15));
+	wiringPiI2CWriteReg8(RTC, MIN, binaryConverter(4));
+	wiringPiI2CWriteReg8(RTC, SEC, binaryConverter(30));
 	
 	// Repeat this until we shut down
 	for (;;){
 		//Fetch the time from the RTC
 		//Write your logic here
-		
+		hours= bcdConverter(wiringPiI2CReadReg8 (RTC, HOUR)) ;
+		mins= bcdConverter(wiringPiI2CReadReg8 (RTC, MIN)) ;
+		secs= bcdConverter(wiringPiI2CReadReg8 (RTC, SEC)) ;
+
 		//Function calls to toggle LEDs
 		//Write your logic here
 		
 		// Print out the time we have stored on our RTC
-		printf("The current time is: %x:%x:%x\n", hours, mins, secs);
+		printf("The current time is: %02d:%02d:%02d\n", hours, mins, secs);
 
 		//using a delay to make our program "less CPU hungry"
 		delay(1000); //milliseconds
 	}
 	return 0;
+}
+
+/*
+ * Performs bitwise operations to extract BCD
+ */
+
+int bcdConverter(int BCD){
+	int ones = BCD & 0b00001111;
+	int tens = ((BCD & (0b01110000))>>4);
+	return ones + tens*10;
+}
+
+int binaryConverter(int bin){
+	int ones =bin%10 ;
+	int tens = ((bin-ones)/10)<<4;
+	return ((ones | tens) | 0b10000000);
 }
 
 /*
