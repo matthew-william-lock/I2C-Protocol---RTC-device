@@ -74,8 +74,8 @@ int main(void){
 
 	//Set random time (3:04PM)
 	//You can comment this file out later
-	wiringPiI2CWriteReg8(RTC, HOUR, binaryConverter(15));
-	wiringPiI2CWriteReg8(RTC, MIN, binaryConverter(4));
+	wiringPiI2CWriteReg8(RTC, HOUR, binaryConverter(22));
+	wiringPiI2CWriteReg8(RTC, MIN, binaryConverter(55));
 	wiringPiI2CWriteReg8(RTC, SEC, binaryConverter(30));
 	
 	// Repeat this until we shut down
@@ -241,9 +241,14 @@ void hourInc(void){
 
 	if (interruptTime - lastInterruptTime>200){
 		printf("Interrupt 1 triggered, %x\n", hours);
-		//Fetch RTC Time
-		//Increase hours by 1, ensuring not to overflow
-		//Write hours back to the RTC
+		
+		hours = getHoursRTC();
+		hours++;
+
+		if (hours>23) hours=0;
+
+		wiringPiI2CWriteReg8(RTC, HOUR, binaryConverter(hours));
+
 	}
 	lastInterruptTime = interruptTime;
 }
@@ -259,9 +264,20 @@ void minInc(void){
 
 	if (interruptTime - lastInterruptTime>200){
 		printf("Interrupt 2 triggered, %x\n", mins);
-		//Fetch RTC Time
-		//Increase minutes by 1, ensuring not to overflow
-		//Write minutes back to the RTC
+		
+		hours = getHoursRTC();
+		mins = getMinsRCTC();
+
+		mins++;
+
+		if (mins>59) {
+			mins++;
+			if (hours>23) hours=0;
+			mins =0;
+		}
+
+		wiringPiI2CWriteReg8(RTC, HOUR, binaryConverter(hours));
+		wiringPiI2CWriteReg8(RTC, MIN, binaryConverter(mins));
 	}
 	lastInterruptTime = interruptTime;
 }
