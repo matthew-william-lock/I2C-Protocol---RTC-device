@@ -23,7 +23,8 @@ int RTC; //Holds the RTC instance
 
 int HH,MM,SS;
 
-void myInterrupt0 (void) { printf("TEST\n");};
+void myInterrupt1 (void) { printf("Button 1\n");};
+void myInterrupt2 (void) { printf("Button 2\n");};
 
 void initGPIO(void){
 	/* 
@@ -49,13 +50,15 @@ void initGPIO(void){
 	//Set up the Buttons
 	for(int j; j < sizeof(BTNS)/sizeof(BTNS[0]); j++){
 		pinMode(BTNS[j], INPUT);
-		pullUpDnControl(BTNS[j], PUD_UP);
+		//Changed to pull down
+		pullUpDnControl(BTNS[j], PUD_DOWN);
 	}
 	
 	//Attach interrupts to Buttons
 	//Write your logic here
 
-	wiringPiISR (5, INT_EDGE_RISING,  &myInterrupt0) ;
+	wiringPiISR (BTNS[0], INT_EDGE_RISING,  &hourInc );
+	wiringPiISR (BTNS[1], INT_EDGE_RISING,  &minInc) ;
 	
 	printf("BTNS done\n");
 	printf("Setup done\n");
