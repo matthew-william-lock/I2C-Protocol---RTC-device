@@ -25,6 +25,7 @@ int HH,MM,SS,h;
 
 //Array for writing to LEDS
 int hoursLED[12][4];
+int minsLED[60][7];
 
 
 void initGPIO(void){
@@ -78,7 +79,7 @@ int main(void){
 
 	initGPIO();
 
-	//Setup of Binary array
+	//Setup of Binary Arrays
 	for (int z = 0; z < 12; ++z) {
     hoursLED[z][0] = GET_BIT(z, 3);
     hoursLED[z][1] = GET_BIT(z, 2);
@@ -86,13 +87,22 @@ int main(void){
     hoursLED[z][3] = GET_BIT(z, 0);
 	}
 
-	
-	//upDateHoursLEDS();
+	for (int z = 0; z < 60; ++z) {
+    minsLED[z][0] = GET_BIT(z, 6);
+    minsLED[z][1] = GET_BIT(z, 5);
+    minsLED[z][2] = GET_BIT(z, 4);
+	minsLED[z][3] = GET_BIT(z, 3);
+    minsLED[z][4] = GET_BIT(z, 2);
+	minsLED[z][5] = GET_BIT(z, 1);
+	minsLED[z][6] = GET_BIT(z, 0);
+	}
 
-	//Print Binary Array
-	// for (int i = 0; i < 12; ++i, puts(""))
-    //     for (int j = 0; j < 4; ++j)
-    //         printf("%d", hoursLED[i][j]);
+	// Test Binsary Array
+	// for (int i = 0; i < 60; ++i, puts(""))
+    //     for (int j = 0; j < 7; ++j)
+    //         printf("%d", minsLED[i][j]);
+
+	
 
 	
 	//Start counting
@@ -118,6 +128,7 @@ int main(void){
 		// Print out the time we have stored on our RTC
 		printf("The current time is: %02d:%02d:%02d\n", hours, mins, secs);
 		lightHours(hours);
+		lightMins(mins);
 
 		//int secs= wiringPiI2CReadReg8 (RTC, SEC) ;
 		//printf("%d\n",secs);
@@ -190,7 +201,9 @@ void lightHours(int units){
  * Turn on the Minute LEDs
  */
 void lightMins(int units){
-	//Write your logic to light up the minute LEDs here
+	for(int z=0; z < sizeof(minLEDs)/sizeof(minLEDs[0]); z++){
+		digitalWrite (minLEDs[z],minsLED[units][z]);
+	}
 }
 
 /*
@@ -309,6 +322,8 @@ void minInc(void){
 
 		wiringPiI2CWriteReg8(RTC, HOUR, binaryConverter(hours));
 		wiringPiI2CWriteReg8(RTC, MIN, binaryConverter(mins));
+
+		lightMins(mins);
 	}
 	lastInterruptTime = interruptTime;
 }
