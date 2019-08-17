@@ -145,7 +145,7 @@ int main(void){
 void sig_handler(int signo)
 {
   if (signo == SIGINT)
-  	wiringPiI2CWriteReg8(RTC, HOUR, 0);
+  {	wiringPiI2CWriteReg8(RTC, HOUR, 0);
 	wiringPiI2CWriteReg8(RTC, MIN, 0);
 	wiringPiI2CWriteReg8(RTC, SEC, 0);
 
@@ -153,9 +153,10 @@ void sig_handler(int signo)
 		digitalWrite (LEDS[z],0);
 	}
 
-    printf("\nGPIO Cleared!\n");
-	
+    printf("\nGPIO Cleared!");
+
 	exit(0);
+	}    
 }
 
 int getHoursRTC(){
