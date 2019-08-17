@@ -27,7 +27,7 @@ int HH,MM,SS,h;
 
 //Array for writing to LEDS
 int hoursLED[12][4];
-int minsLED[60][7];
+int minsLED[60][6];
 
 
 void initGPIO(void){
@@ -45,6 +45,8 @@ void initGPIO(void){
 	for(int i=0; i < sizeof(LEDS)/sizeof(LEDS[0]); i++){
 	    pinMode(LEDS[i], OUTPUT); 		
 	}
+
+	pinMode(PWM,PWM_OUTPUT);
 	
 	//Set Up the Seconds LED for PWM
 	//Write your logic here
@@ -92,13 +94,12 @@ int main(void){
 	}
 
 	for (int z = 0; z < 60; ++z) {
-    minsLED[z][0] = GET_BIT(z, 6);
-    minsLED[z][1] = GET_BIT(z, 5);
-    minsLED[z][2] = GET_BIT(z, 4);
-	minsLED[z][3] = GET_BIT(z, 3);
-    minsLED[z][4] = GET_BIT(z, 2);
-	minsLED[z][5] = GET_BIT(z, 1);
-	minsLED[z][6] = GET_BIT(z, 0);
+    minsLED[z][0] = GET_BIT(z, 5);
+    minsLED[z][1] = GET_BIT(z, 4);
+    minsLED[z][2] = GET_BIT(z, 3);
+	minsLED[z][3] = GET_BIT(z, 2);
+    minsLED[z][4] = GET_BIT(z, 1);
+	minsLED[z][5] = GET_BIT(z, 0);
 	}
 
 	// Test Binsary Array
@@ -132,6 +133,7 @@ int main(void){
 		printf("The current time is: %02d:%02d:%02d\n", hours, mins, secs);
 		lightHours(hours);
 		lightMins(mins);
+		secPWM(secs);
 
 		//int secs= wiringPiI2CReadReg8 (RTC, SEC) ;
 		//printf("%d\n",secs);
@@ -152,6 +154,7 @@ void sig_handler(int signo)
 	for(int z=0; z < sizeof(LEDS)/sizeof(LEDS); z++){
 		digitalWrite (LEDS[z],0);
 	}
+	pwmWrite(PWM,0);
 
     printf("\nGPIO Cleared!");
 
@@ -232,7 +235,9 @@ void lightMins(int units){
  * The LED should be "off" at 0 seconds, and fully bright at 59 seconds
  */
 void secPWM(int units){
-	// Write your logic here
+	float level = (int)(((float)units/59)*1024);
+	pwmWrite(PWM,(int)level);
+	//digitalWrite(PWM,0);
 }
 
 /*
