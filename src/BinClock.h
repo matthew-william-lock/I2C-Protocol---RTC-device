@@ -22,6 +22,7 @@ int binaryConverter(int bin);
 int getHoursRTC();
 int getMinsRCTC();
 int getSecsRTC();
+void sig_handler(int signo);
 
 // define constants
 const char RTCAddr = 0x6f;

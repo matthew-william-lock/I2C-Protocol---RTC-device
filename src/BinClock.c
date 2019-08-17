@@ -12,9 +12,11 @@
 #include <wiringPiI2C.h>
 #include <stdio.h> //For printf functions
 #include <stdlib.h> // For system functions
+#include <signal.h>
 
 #include "BinClock.h"
 #include "CurrentTime.h"
+#include<unistd.h>
 
 //Global variables
 int hours, mins, secs;
@@ -72,6 +74,8 @@ void initGPIO(void){
  * This function is called, and calls all relevant functions we've written
  */
 int main(void){
+	
+	if (signal(SIGINT, sig_handler) == SIG_ERR);
 
 	//printf("Setting up\n");
 	//wiringPiSetup(); //This is the default mode. If you want to change pinouts, be aware
@@ -101,16 +105,15 @@ int main(void){
 	// for (int i = 0; i < 60; ++i, puts(""))
     //     for (int j = 0; j < 7; ++j)
     //         printf("%d", minsLED[i][j]);
-
-	
-
 	
 	//Start counting
 	wiringPiI2CWriteReg8(RTC, SEC, 0b10000001);
 
-	wiringPiI2CWriteReg8(RTC, HOUR, binaryConverter(22));
-	wiringPiI2CWriteReg8(RTC, MIN, binaryConverter(55));
-	wiringPiI2CWriteReg8(RTC, SEC, binaryConverter(30));
+	// wiringPiI2CWriteReg8(RTC, HOUR, binaryConverter(10));
+	// wiringPiI2CWriteReg8(RTC, MIN, binaryConverter(55));
+	// wiringPiI2CWriteReg8(RTC, SEC, binaryConverter(30));
+
+	toggleTime();
 	
 	
 	// Repeat this until we shut down
@@ -137,6 +140,22 @@ int main(void){
 		delay(1000); //milliseconds
 	}
 	return 0;
+}
+
+void sig_handler(int signo)
+{
+  if (signo == SIGINT)
+  	wiringPiI2CWriteReg8(RTC, HOUR, 0);
+	wiringPiI2CWriteReg8(RTC, MIN, 0);
+	wiringPiI2CWriteReg8(RTC, SEC, 0);
+
+	for(int z=0; z < sizeof(LEDS)/sizeof(LEDS); z++){
+		digitalWrite (LEDS[z],0);
+	}
+
+    printf("\nGPIO Cleared!\n");
+	
+	exit(0);
 }
 
 int getHoursRTC(){
@@ -324,6 +343,8 @@ void minInc(void){
 		wiringPiI2CWriteReg8(RTC, MIN, binaryConverter(mins));
 
 		lightMins(mins);
+
+		
 	}
 	lastInterruptTime = interruptTime;
 }
@@ -331,23 +352,19 @@ void minInc(void){
 //This interrupt will fetch current time from another script and write it to the clock registers
 //This functions will toggle a flag that is checked in main
 void toggleTime(void){
-	long interruptTime = millis();
+	HH = getHours();
+	MM = getMins();
+	SS = getSecs();
 
-	if (interruptTime - lastInterruptTime>200){
-		HH = getHours();
-		MM = getMins();
-		SS = getSecs();
+	//HH = hFormat(HH);
+	HH = decCompensation(HH);
+	wiringPiI2CWriteReg8(RTC, HOUR, HH);
 
-		HH = hFormat(HH);
-		HH = decCompensation(HH);
-		wiringPiI2CWriteReg8(RTC, HOUR, HH);
+	MM = decCompensation(MM);
+	wiringPiI2CWriteReg8(RTC, MIN, MM);
 
-		MM = decCompensation(MM);
-		wiringPiI2CWriteReg8(RTC, MIN, MM);
+	SS = decCompensation(SS);
+	wiringPiI2CWriteReg8(RTC, SEC, 0b10000000+SS);
 
-		SS = decCompensation(SS);
-		wiringPiI2CWriteReg8(RTC, SEC, 0b10000000+SS);
 
-	}
-	lastInterruptTime = interruptTime;
 }
