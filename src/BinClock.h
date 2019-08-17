@@ -17,6 +17,9 @@ void minInc(void);
 void toggleTime(void);
 int bcdConverter(int BCD);
 int binaryConverter(int bin);
+int getHoursRTC();
+int getMinsRCTC();
+int getSecsRTC();
 
 // define constants
 const char RTCAddr = 0x6f;

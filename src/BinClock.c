@@ -23,6 +23,8 @@ int RTC; //Holds the RTC instance
 
 int HH,MM,SS;
 
+void myInterrupt0 (void) { printf("TEST\n");};
+
 void initGPIO(void){
 	/* 
 	 * Sets GPIO using wiringPi pins. see pinout.xyz for specific wiringPi pins
@@ -52,6 +54,8 @@ void initGPIO(void){
 	
 	//Attach interrupts to Buttons
 	//Write your logic here
+
+	wiringPiISR (5, INT_EDGE_RISING,  &myInterrupt0) ;
 	
 	printf("BTNS done\n");
 	printf("Setup done\n");
@@ -75,9 +79,10 @@ int main(void){
 	for (;;){
 		//Fetch the time from the RTC
 		//Write your logic here
-		hours= bcdConverter(wiringPiI2CReadReg8 (RTC, HOUR)) ;
-		mins= bcdConverter(wiringPiI2CReadReg8 (RTC, MIN)) ;
-		secs= bcdConverter(wiringPiI2CReadReg8 (RTC, SEC)) ;
+
+		hours= getHoursRTC() ;
+		mins= getMinsRCTC() ;
+		secs= getSecsRTC() ;
 
 		//Function calls to toggle LEDs
 		//Write your logic here
@@ -85,11 +90,32 @@ int main(void){
 		// Print out the time we have stored on our RTC
 		printf("The current time is: %02d:%02d:%02d\n", hours, mins, secs);
 
+		//int secs= wiringPiI2CReadReg8 (RTC, SEC) ;
+		//printf("%d\n",secs);
+
 		//using a delay to make our program "less CPU hungry"
-		delay(1000); //milliseconds
+		delay(500); //milliseconds
 	}
 	return 0;
 }
+
+int getHoursRTC(){
+	int hours= bcdConverter(wiringPiI2CReadReg8 (RTC, HOUR)) ;
+	return hours;
+}
+
+int getMinsRCTC(){
+	int mins= bcdConverter(wiringPiI2CReadReg8 (RTC, MIN)) ;
+	return mins;
+
+}
+
+int getSecsRTC(){
+	int secs= bcdConverter(wiringPiI2CReadReg8 (RTC, SEC)) ;
+	return secs;
+}
+
+
 
 /*
  * Performs bitwise operations to extract BCD
