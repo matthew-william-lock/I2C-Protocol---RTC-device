@@ -21,10 +21,11 @@ int hours, mins, secs;
 long lastInterruptTime = 0; //Used for button debounce
 int RTC; //Holds the RTC instance
 
-int HH,MM,SS;
+int HH,MM,SS,h;
 
-void myInterrupt1 (void) { printf("Button 1\n");};
-void myInterrupt2 (void) { printf("Button 2\n");};
+//Array for writing to LEDS
+int hoursLED[12][4];
+
 
 void initGPIO(void){
 	/* 
@@ -32,23 +33,23 @@ void initGPIO(void){
 	 * You can also use "gpio readall" in the command line to get the pins
 	 * Note: wiringPi does not use GPIO or board pin numbers (unless specifically set to that mode)
 	 */
-	printf("Setting up\n");
-	wiringPiSetup(); //This is the default mode. If you want to change pinouts, be aware
+
+	 printf("Setting up\n");
+	 wiringPiSetup(); //This is the default mode. If you want to change pinouts, be aware
 	
 	RTC = wiringPiI2CSetup(RTCAddr); //Set up the RTC
 	
-	//Set up the LEDS
-	for(int i; i < sizeof(LEDS)/sizeof(LEDS[0]); i++){
-	    pinMode(LEDS[i], OUTPUT);
+	for(int i=0; i < sizeof(LEDS)/sizeof(LEDS[0]); i++){
+	    pinMode(LEDS[i], OUTPUT); 		
 	}
 	
 	//Set Up the Seconds LED for PWM
 	//Write your logic here
 	
-	printf("LEDS done\n");
+
 	
 	//Set up the Buttons
-	for(int j; j < sizeof(BTNS)/sizeof(BTNS[0]); j++){
+	for(int j=0; j < sizeof(BTNS)/sizeof(BTNS[0]); j++){
 		pinMode(BTNS[j], INPUT);
 		//Changed to pull down
 		pullUpDnControl(BTNS[j], PUD_DOWN);
@@ -70,13 +71,37 @@ void initGPIO(void){
  * This function is called, and calls all relevant functions we've written
  */
 int main(void){
+
+	//printf("Setting up\n");
+	//wiringPiSetup(); //This is the default mode. If you want to change pinouts, be aware
+	wiringPiSetup();
+
 	initGPIO();
 
-	//Set random time (3:04PM)
-	//You can comment this file out later
+	//Setup of Binary array
+	for (int z = 0; z < 12; ++z) {
+    hoursLED[z][0] = GET_BIT(z, 3);
+    hoursLED[z][1] = GET_BIT(z, 2);
+    hoursLED[z][2] = GET_BIT(z, 1);
+    hoursLED[z][3] = GET_BIT(z, 0);
+	}
+
+	
+	//upDateHoursLEDS();
+
+	//Print Binary Array
+	// for (int i = 0; i < 12; ++i, puts(""))
+    //     for (int j = 0; j < 4; ++j)
+    //         printf("%d", hoursLED[i][j]);
+
+	
+	//Start counting
+	wiringPiI2CWriteReg8(RTC, SEC, 0b10000001);
+
 	wiringPiI2CWriteReg8(RTC, HOUR, binaryConverter(22));
 	wiringPiI2CWriteReg8(RTC, MIN, binaryConverter(55));
 	wiringPiI2CWriteReg8(RTC, SEC, binaryConverter(30));
+	
 	
 	// Repeat this until we shut down
 	for (;;){
@@ -85,19 +110,20 @@ int main(void){
 
 		hours= getHoursRTC() ;
 		mins= getMinsRCTC() ;
-		secs= getSecsRTC() ;
+		secs= getSecsRTC();
 
 		//Function calls to toggle LEDs
 		//Write your logic here
 		
 		// Print out the time we have stored on our RTC
 		printf("The current time is: %02d:%02d:%02d\n", hours, mins, secs);
+		lightHours(hours);
 
 		//int secs= wiringPiI2CReadReg8 (RTC, SEC) ;
 		//printf("%d\n",secs);
 
 		//using a delay to make our program "less CPU hungry"
-		delay(500); //milliseconds
+		delay(1000); //milliseconds
 	}
 	return 0;
 }
@@ -154,7 +180,10 @@ int hFormat(int hours){
  * Turns on corresponding LED's for hours
  */
 void lightHours(int units){
-	// Write your logic to light up the hour LEDs here	
+	int h=hFormat(units);
+	for(int z=0; z < sizeof(hoursLEDs)/sizeof(hoursLEDs[0]); z++){
+		digitalWrite (hoursLEDs[z],hoursLED[h][z]);
+	}
 }
 
 /*
@@ -248,6 +277,8 @@ void hourInc(void){
 		if (hours>23) hours=0;
 
 		wiringPiI2CWriteReg8(RTC, HOUR, binaryConverter(hours));
+
+		lightHours(hours);
 
 	}
 	lastInterruptTime = interruptTime;

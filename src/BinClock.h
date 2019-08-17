@@ -1,6 +1,8 @@
 #ifndef BINCLOCK_H
 #define BINCLOCK_H
 
+#define GET_BIT(x, n) (((x) >> (n)) & 1)
+
 //Some reading (if you want)
 //https://stackoverflow.com/questions/1674032/static-const-vs-define-vs-enum
 
@@ -32,6 +34,8 @@ const char TIMEZONE = 2; // +02H00 (RSA)
 const int LEDS[] = {0,2,3,25,7,22,21,27,4,6}; //H0-H4, M0-M5
 const int SECS = 1;
 const int BTNS[] = {5,30}; // B0, B1
+
+const int hoursLEDs[]={0,2,3,25};
 
 
 #endif
